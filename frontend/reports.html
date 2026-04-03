@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reports & Analytics — MessAdmin</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+/* Stats UI for reports */
+.report-kpistrip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.rkpi{padding:18px 22px;border-radius:14px;position:relative;overflow:hidden;border:1px solid var(--border-glass)}
+.rkpi::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--col)}
+.rkpi-inner{position:relative;z-index:1}
+.rkpi-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.rkpi-val{font-size:30px;font-weight:900;font-family:'Outfit',sans-serif;color:var(--text-primary)}
+.rkpi-sub{font-size:12px;color:var(--text-secondary);margin-top:6px}
+
+.chart-box{background:var(--bg-card);border:1px solid var(--border-glass);border-radius:16px;padding:24px;box-shadow:0 12px 30px rgba(0,0,0,.2)}
+.chart-box .cb-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.chart-box h3{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+
+.top-table td { padding:14px; }
+.rank-badge{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;color:#fff}
+.rank-1{background:linear-gradient(135deg,#fcd34d,#f59e0b);box-shadow:0 0 10px rgba(245,158,11,.4)}
+.rank-2{background:linear-gradient(135deg,#e2e8f0,#94a3b8);box-shadow:0 0 10px rgba(148,163,184,.4)}
+.rank-3{background:linear-gradient(135deg,#fdba74,#d97706);box-shadow:0 0 10px rgba(217,119,6,.4)}
+.rank-other{background:rgba(255,255,255,.1)}
+
+.donut-legend{display:flex;flex-direction:column;gap:12px;margin-top:20px}
+.d-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border-glass)}
+.d-dot{width:12px;height:12px;border-radius:50%}
+.d-label{font-size:13px;color:var(--text-secondary);flex:1}
+.d-val{font-weight:700;font-size:14px}
+</style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="brand-icon">🍽️</div><div class="brand-text"><span class="brand-name">MessAdmin</span><span class="brand-sub">Hostel System</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="dashboard.html"  class="nav-link"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="students.html"   class="nav-link"><span class="nav-icon">👨‍🎓</span>Students</a>
+    <a href="attendance.html" class="nav-link"><span class="nav-icon">✅</span>Attendance</a>
+    <div class="nav-section-label">Operations</div>
+    <a href="menu.html"       class="nav-link"><span class="nav-icon">🍱</span>Weekly Menu</a>
+    <a href="billing.html"    class="nav-link"><span class="nav-icon">💰</span>Billing</a>
+    <div class="nav-section-label">Analytics</div>
+    <a href="reports.html"    class="nav-link active"><span class="nav-icon">📈</span>Reports</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user"><div class="user-avatar" id="sidebar-avatar">A</div><div><div class="user-name" id="sidebar-username">Admin</div><div class="user-role" id="sidebar-role">Administrator</div></div></div>
+    <button class="btn btn-outline btn-sm w-100 mt-16" id="logout-btn">🚪 Logout</button>
+  </div>
+</aside>
+
+<div class="main-content">
+  <header class="topbar">
+    <h1 class="page-title">📈 Analytics Overview</h1>
+    <div class="topbar-right">
+      <input type="month" id="rep-month" class="form-control" style="width:160px" onchange="loadAll()">
+      <button class="btn btn-primary btn-sm" onclick="loadAll()">🔄 Refresh</button>
+    </div>
+  </header>
+
+  <div class="content-wrap">
+    
+    <!-- Top KPIs -->
+    <div class="report-kpistrip">
+      <div class="glass-card rkpi" style="--col:#10b981">
+        <div class="rkpi-inner">
+          <div class="rkpi-label">Month Collection</div>
+          <div class="rkpi-val" id="r-coll">₹0</div>
+          <div class="rkpi-sub" id="r-bills">from 0 bills</div>
+        </div>
+      </div>
+      <div class="glass-card rkpi" style="--col:#ef4444">
+        <div class="rkpi-inner">
+          <div class="rkpi-label">Pending Dues</div>
+          <div class="rkpi-val" id="r-pend">₹0</div>
+          <div class="rkpi-sub" id="r-pend-cnt">0 bills remaining</div>
+        </div>
+      </div>
+      <div class="glass-card rkpi" style="--col:#818cf8">
+        <div class="rkpi-inner">
+          <div class="rkpi-label">Advance Credit</div>
+          <div class="rkpi-val" id="r-adv">₹0</div>
+          <div class="rkpi-sub">pre-paid amounts</div>
+        </div>
+      </div>
+      <div class="glass-card rkpi" style="--col:#f59e0b">
+        <div class="rkpi-inner">
+          <div class="rkpi-label">Top Eater (Meals)</div>
+          <div class="rkpi-val" id="r-top-name">—</div>
+          <div class="rkpi-sub" id="r-top-meals">0 meals this month</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:20px">
+      <!-- Revenue Trends Row -->
+      <div class="chart-box">
+        <div class="cb-head"><h3>💰 Revenue & Dues Trend (Last 12 Months)</h3></div>
+        <div style="height:320px"><canvas id="revenueChart"></canvas></div>
+      </div>
+      
+      <!-- Payment Donut -->
+      <div class="chart-box">
+        <div class="cb-head"><h3>💳 Payment State (This Month)</h3></div>
+        <div style="height:220px"><canvas id="payChart"></canvas></div>
+        <div class="donut-legend" id="donut-legend"></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.5fr 2fr;gap:20px">
+      <!-- Top Students -->
+      <div class="chart-box" style="padding:0;overflow:hidden">
+        <div class="cb-head" style="padding:24px 24px 0 24px"><h3>🏆 Top Rate Residents</h3></div>
+        <div class="table-wrap" style="margin-top:10px">
+          <table class="top-table">
+            <thead><tr><th>Rank</th><th>Resident</th><th>Room</th><th style="text-align:right">Meals Avg</th></tr></thead>
+            <tbody id="top-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Meal Consumption -->
+      <div class="chart-box">
+        <div class="cb-head"><h3>🍛 Meal Popularity & Trend</h3></div>
+        <div style="height:280px"><canvas id="mealTrendChart"></canvas></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+requireAuth();
+document.getElementById('rep-month').value=currentMonth();
+
+Chart.defaults.color='#94a3b8';
+Chart.defaults.font.family="'Inter', sans-serif";
+Chart.defaults.scale.grid.color='rgba(255,255,255,0.05)';
+
+let revChart, mealChart, payChart;
+
+function fmt(n){ return '₹'+Math.round(n).toLocaleString('en-IN'); }
+
+async function loadAll() {
+  const month=document.getElementById('rep-month').value;
+  try {
+    const [rev, meals, top, pay] = await Promise.all([
+      api.get('/reports/monthly-revenue'),
+      api.get('/reports/meal-consumption'),
+      api.get('/reports/top-students?month='+month),
+      api.get('/reports/payment-stats?month='+month),
+    ]);
+
+    // Update Top KPIs
+    document.getElementById('r-coll').textContent=fmt(pay.paid_amount);
+    document.getElementById('r-pend').textContent=fmt(pay.pending_amount);
+    document.getElementById('r-adv').textContent=fmt(pay.advance_amount);
+    document.getElementById('r-bills').textContent=`from ${pay.paid_count}/${pay.total_bills} bills paid`;
+    document.getElementById('r-pend-cnt').textContent=`${pay.pending_count} accounts pending`;
+    if(top.length){
+      document.getElementById('r-top-name').textContent=top[0].name.split(' ')[0];
+      document.getElementById('r-top-meals').textContent=`${top[0].total_meals} total meals`;
+    }
+
+    // Revenue Chart (Bar)
+    if(revChart) revChart.destroy();
+    revChart = new Chart(document.getElementById('revenueChart'), {
+      type: 'bar',
+      data: {
+        labels: rev.map(r=>r.month),
+        datasets: [
+          { label:'Paid',    data: rev.map(r=>r.paid_revenue),    backgroundColor:'#10b981', borderRadius:4 },
+          { label:'Advance', data: rev.map(r=>r.advance_revenue), backgroundColor:'#818cf8', borderRadius:4 },
+          { label:'Dues',    data: rev.map(r=>r.pending_revenue), backgroundColor:'#ef4444', borderRadius:4 },
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        scales:{ x:{stacked:true}, y:{stacked:true, ticks:{callback:v=>'₹'+v}} },
+        plugins:{ legend:{position:'bottom'}, tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': ₹'+ctx.raw.toLocaleString('en-IN')}} }
+      }
+    });
+
+    // Payment Donut
+    if(payChart) payChart.destroy();
+    if(pay.total_bills > 0){
+      payChart = new Chart(document.getElementById('payChart'), {
+        type: 'doughnut',
+        data: {
+          labels:['Paid','Pending/Partial'],
+          datasets:[{ data:[pay.paid_count,pay.pending_count], backgroundColor:['#10b981','#ef4444'], borderWidth:0 }]
+        },
+        options:{responsive:true, maintainAspectRatio:false, cutout:'75%', plugins:{legend:{display:false}}}
+      });
+    }
+    document.getElementById('donut-legend').innerHTML=`
+      <div class="d-item"><div class="d-dot" style="background:#10b981"></div><div class="d-label">Collected</div><div class="d-val">${fmt(pay.paid_amount)}</div></div>
+      <div class="d-item"><div class="d-dot" style="background:#ef4444"></div><div class="d-label">Remaining Dues</div><div class="d-val" style="color:#ef4444">${fmt(pay.pending_amount)}</div></div>
+      <div class="d-item"><div class="d-dot" style="background:#818cf8"></div><div class="d-label">Advance Credit</div><div class="d-val" style="color:#818cf8">${fmt(pay.advance_amount)}</div></div>
+    `;
+
+    // Meal Trends (Line)
+    if(mealChart) mealChart.destroy();
+    const grad = (c) => {
+      let ctx=document.getElementById('mealTrendChart').getContext('2d');
+      let g=ctx.createLinearGradient(0,0,0,300); g.addColorStop(0,c); g.addColorStop(1,'rgba(0,0,0,0)'); return g;
+    };
+    mealChart = new Chart(document.getElementById('mealTrendChart'), {
+      type: 'line',
+      data: {
+        labels: meals.map(r=>r.month),
+        datasets: [
+          { label:'Dinner', data:meals.map(r=>r.dinner), borderColor:'#818cf8', backgroundColor:grad('rgba(129,140,248,0.4)'), fill:true, tension:0.4, borderWidth:3, pointRadius:0 },
+          { label:'Lunch', data:meals.map(r=>r.lunch), borderColor:'#10b981', backgroundColor:grad('rgba(16,185,129,0.3)'), fill:true, tension:0.4, borderWidth:3, pointRadius:0 },
+          { label:'Breakfast', data:meals.map(r=>r.breakfast), borderColor:'#f59e0b', backgroundColor:grad('rgba(245,158,11,0.2)'), fill:true, tension:0.4, borderWidth:3, pointRadius:0 },
+        ]
+      },
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index'}, plugins:{legend:{position:'bottom'}} }
+    });
+
+    // Top Students 
+    document.getElementById('top-tbody').innerHTML = top.map((r,i) => {
+      let cls = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-other';
+      let icon = i===0?'👑':i===1?'🥈':i===2?'🥉':(i+1);
+      return `<tr style="border-bottom:1px solid rgba(255,255,255,0.03)">
+        <td><div class="rank-badge ${cls}">${icon}</div></td>
+        <td style="font-weight:600;font-size:14px">${r.name}</td>
+        <td><span class="badge badge-info">${r.room_no}</span></td>
+        <td style="text-align:right;font-weight:800;font-family:'Outfit',sans-serif;color:var(--primary)">${r.total_meals}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text-muted)">No check-ins this month</td></tr>';
+
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+loadAll();
+</script>
+</body>
+</html>

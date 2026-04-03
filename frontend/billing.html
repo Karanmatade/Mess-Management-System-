@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Billing — MessAdmin</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.billing-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+@media(max-width:900px){.billing-kpi{grid-template-columns:repeat(2,1fr)}}
+.kpi-card{padding:20px 22px;border-radius:14px;position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;inset:0;background:var(--gb,rgba(99,102,241,.12));z-index:0}
+.kpi-inner{position:relative;z-index:1}
+.kpi-icon{font-size:28px;margin-bottom:6px}
+.kpi-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px}
+.kpi-val{font-size:26px;font-weight:800;font-family:'Outfit',sans-serif}
+
+/* amount bar */
+.pay-bar-wrap{width:120px}
+.pay-bar-bg{height:6px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden}
+.pay-bar-fill{height:6px;border-radius:6px;transition:width .5s ease}
+
+/* status pills */
+.pill-paid{background:rgba(16,185,129,.2);color:#34d399;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.pill-pending{background:rgba(239,68,68,.2);color:#f87171;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.pill-partial{background:rgba(245,158,11,.2);color:#fbbf24;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.pill-advance{background:rgba(99,102,241,.2);color:#818cf8;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+
+/* edit modal grid */
+.eg2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+</style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="brand-icon">🍽️</div><div class="brand-text"><span class="brand-name">MessAdmin</span><span class="brand-sub">Hostel System</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="dashboard.html" class="nav-link"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="students.html"  class="nav-link"><span class="nav-icon">👨‍🎓</span>Students</a>
+    <a href="attendance.html"class="nav-link"><span class="nav-icon">✅</span>Attendance</a>
+    <div class="nav-section-label">Operations</div>
+    <a href="menu.html"      class="nav-link"><span class="nav-icon">🍱</span>Weekly Menu</a>
+    <a href="billing.html"   class="nav-link"><span class="nav-icon">💰</span>Billing</a>
+    <div class="nav-section-label">Analytics</div>
+    <a href="reports.html"   class="nav-link"><span class="nav-icon">📈</span>Reports</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user"><div class="user-avatar" id="sidebar-avatar">A</div><div><div class="user-name" id="sidebar-username">Admin</div><div class="user-role" id="sidebar-role">Administrator</div></div></div>
+    <button class="btn btn-outline btn-sm w-100 mt-16" id="logout-btn">🚪 Logout</button>
+  </div>
+</aside>
+
+<div class="main-content">
+  <header class="topbar">
+    <h1 class="page-title">💰 Billing</h1>
+    <div class="topbar-right" style="gap:8px">
+      <input type="month" id="month-pick" class="form-control" style="width:160px" onchange="load()">
+      <select class="form-control" id="status-pick" style="width:130px" onchange="load()">
+        <option value="">All</option><option value="paid">Paid</option>
+        <option value="pending">Pending</option><option value="partial">Partial</option>
+      </select>
+      <button class="btn btn-outline btn-sm" onclick="load()">🔄</button>
+      <button class="btn btn-primary btn-sm" onclick="genBills()">⚡ Generate Bills</button>
+    </div>
+  </header>
+
+  <div class="content-wrap">
+    <!-- KPIs -->
+    <div class="billing-kpi" id="kpi-strip">
+      <kpi style="--gb:rgba(99,102,241,.12)"><div class="kpi-icon">📋</div><div class="kpi-label">Total Bills</div><div class="kpi-val" id="k-total">—</div></kpi>
+      <kpi style="--gb:rgba(16,185,129,.12)"><div class="kpi-icon">✅</div><div class="kpi-label">Collected</div><div class="kpi-val" id="k-coll" style="color:var(--success)">—</div></kpi>
+      <kpi style="--gb:rgba(239,68,68,.12)"><div class="kpi-icon">⏳</div><div class="kpi-label">Pending</div><div class="kpi-val" id="k-pend" style="color:var(--danger)">—</div></kpi>
+      <kpi style="--gb:rgba(245,158,11,.12)"><div class="kpi-icon">➡️</div><div class="kpi-label">Advance Credit</div><div class="kpi-val" id="k-adv" style="color:#fbbf24">—</div></kpi>
+    </div>
+
+    <!-- Table -->
+    <div class="glass-card" style="padding:22px">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th><th>Room</th><th>Meals</th><th>Bill Amount</th>
+              <th>Paid</th><th>Balance / Advance</th><th>Status</th><th>Payment Date</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bill-tbody"><tr><td colspan="9"><div class="page-loader"><div class="spinner"></div><span>Loading…</span></div></td></tr></tbody>
+        </table>
+      </div>
+      <div id="bill-empty" class="hidden" style="text-align:center;padding:48px">
+        <div style="font-size:56px;margin-bottom:12px">💸</div>
+        <h3>No bills found</h3>
+        <p style="color:var(--text-muted);font-size:14px;margin:8px 0 20px">Generate bills from attendance data first.</p>
+        <button class="btn btn-primary" onclick="genBills()">⚡ Generate Bills</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT BILL MODAL -->
+<div class="modal-overlay" id="edit-modal" onclick="if(event.target===this)closeEdit()">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <h3 class="modal-title" id="edit-title">✏️ Edit Bill</h3>
+      <button class="modal-close" onclick="closeEdit()">✕</button>
+    </div>
+    <form onsubmit="submitEdit(event)" novalidate>
+      <div class="eg2">
+        <div class="form-group">
+          <label class="form-label">Total Meals</label>
+          <input type="number" id="em-meals" class="form-control" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cost per Meal (₹)</label>
+          <input type="number" id="em-rate" class="form-control" min="0" step="5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount Paid (₹)</label>
+          <input type="number" id="em-paid" class="form-control" min="0" step="10" oninput="updateEditCalc()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Payment Status</label>
+          <select id="em-status" class="form-control">
+            <option value="paid">✅ Paid</option>
+            <option value="pending">⏳ Pending</option>
+            <option value="partial">🔸 Partial</option>
+          </select>
+        </div>
+      </div>
+      <div id="edit-calc" style="padding:14px;background:var(--bg-card);border-radius:10px;border:1px solid var(--border-glass);margin-bottom:16px;font-size:14px"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeEdit()">Cancel</button>
+        <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+requireAuth();
+document.getElementById('month-pick').value=currentMonth();
+let bills=[], editBid=null;
+load(); setInterval(()=>load(),30000);
+
+async function load(){
+  const month=document.getElementById('month-pick').value||currentMonth();
+  const status=document.getElementById('status-pick').value;
+  try{
+    let url=`/billing/?month=${month}`;
+    if(status) url+=`&status=${status}`;
+    bills=await api.get(url); render(); updateKPIs();
+  }catch(e){ showToast(e.message,'error'); }
+}
+
+function updateKPIs(){
+  const total=bills.reduce((s,b)=>s+b.total_amount,0);
+  const coll=bills.reduce((s,b)=>s+b.paid_amount,0);
+  const pend=bills.reduce((s,b)=>s+(b.payment_status!=='paid'?(b.total_amount-b.paid_amount):0),0);
+  const adv=bills.reduce((s,b)=>s+b.advance_amount,0);
+  const fmt=v=>'₹'+Math.round(v).toLocaleString('en-IN');
+  document.getElementById('k-total').textContent=fmt(total);
+  document.getElementById('k-coll').textContent=fmt(coll);
+  document.getElementById('k-pend').textContent=fmt(pend);
+  document.getElementById('k-adv').textContent=fmt(adv);
+  // style kpi wrappers
+  document.querySelectorAll('#kpi-strip kpi').forEach((el,i)=>{
+    el.className='glass-card kpi-card'; el.style.cssText='';
+  });
+}
+
+function render(){
+  const empty=document.getElementById('bill-empty');
+  if(!bills.length){ document.getElementById('bill-tbody').innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  document.getElementById('bill-tbody').innerHTML=bills.map(b=>{
+    const pct=b.total_amount>0?Math.min(100,Math.round(b.paid_amount/b.total_amount*100)):0;
+    const pillClass=b.payment_status==='paid'?'pill-paid':b.payment_status==='partial'?'pill-partial':'pill-pending';
+    const balHtml=b.advance_amount>0
+      ?`<span class="pill-advance">+₹${b.advance_amount.toLocaleString('en-IN')} advance</span>`
+      :`<span style="color:${b.balance>0?'var(--danger)':'var(--success)'}">₹${Math.abs(b.balance).toLocaleString('en-IN')} ${b.balance>0?'due':'clear'}</span>`;
+    return `<tr id="row${b.id}">
+      <td><strong>${b.name}</strong></td>
+      <td><span class="badge badge-info">${b.room_no}</span></td>
+      <td style="text-align:center">${b.total_meals}</td>
+      <td><strong>₹${b.total_amount.toLocaleString('en-IN')}</strong></td>
+      <td>
+        <div class="pay-bar-wrap">
+          <div style="font-size:12px;font-weight:600;margin-bottom:3px">₹${b.paid_amount.toLocaleString('en-IN')}</div>
+          <div class="pay-bar-bg"><div class="pay-bar-fill" style="width:${pct}%;background:${pct===100?'#10b981':pct>50?'#f59e0b':'#ef4444'}"></div></div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${pct}%</div>
+        </div>
+      </td>
+      <td>${balHtml}</td>
+      <td><span class="${pillClass}">${b.payment_status.charAt(0).toUpperCase()+b.payment_status.slice(1)}</span></td>
+      <td style="font-size:12px;color:var(--text-muted)">${b.payment_date||'—'}</td>
+      <td>
+        <div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" onclick="openEdit(${b.id})">✏️</button>
+          ${b.payment_status!=='paid'?`<button class="btn btn-success btn-sm" onclick="markPaid(${b.id})">✅ Paid</button>`:`<button class="btn btn-outline btn-sm" onclick="markUnpaid(${b.id})">↩️</button>`}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function genBills(){
+  const month=document.getElementById('month-pick').value||currentMonth();
+  try{
+    const r=await api.post('/billing/generate',{month,cost_per_meal:60});
+    showToast(r.message,'success'); load();
+  }catch(e){ showToast(e.message,'error'); }
+}
+
+async function markPaid(bid){
+  try{ await api.patch(`/billing/${bid}/pay`); showToast('✅ Marked as Paid','success'); load(); }
+  catch(e){ showToast(e.message,'error'); }
+}
+async function markUnpaid(bid){
+  try{ await api.patch(`/billing/${bid}/unpay`); showToast('↩️ Marked as Pending','warning'); load(); }
+  catch(e){ showToast(e.message,'error'); }
+}
+
+// ── Edit modal ─────────────────────────────────────────────
+function openEdit(bid){
+  const b=bills.find(x=>x.id===bid); if(!b)return; editBid=bid;
+  document.getElementById('edit-title').textContent=`✏️ Edit Bill — ${b.name}`;
+  document.getElementById('em-meals').value=b.total_meals;
+  document.getElementById('em-rate').value=b.cost_per_meal;
+  document.getElementById('em-paid').value=b.paid_amount;
+  document.getElementById('em-status').value=b.payment_status;
+  updateEditCalc(); document.getElementById('edit-modal').classList.add('show');
+}
+function closeEdit(){ document.getElementById('edit-modal').classList.remove('show'); editBid=null; }
+function updateEditCalc(){
+  const meals=parseFloat(document.getElementById('em-meals').value)||0;
+  const rate=parseFloat(document.getElementById('em-rate').value)||0;
+  const paid=parseFloat(document.getElementById('em-paid').value)||0;
+  const total=meals*rate; const bal=total-paid; const adv=paid>total?paid-total:0;
+  document.getElementById('edit-calc').innerHTML=`
+    <div style="display:flex;gap:20px;flex-wrap:wrap">
+      <div><div style="font-size:11px;color:var(--text-muted)">Bill Total</div><div style="font-size:18px;font-weight:700">₹${total.toLocaleString('en-IN')}</div></div>
+      <div><div style="font-size:11px;color:var(--text-muted)">Balance Due</div><div style="font-size:18px;font-weight:700;color:${bal>0?'var(--danger)':'var(--success)'}">₹${Math.max(0,bal).toLocaleString('en-IN')}</div></div>
+      ${adv>0?`<div><div style="font-size:11px;color:var(--text-muted)">Advance Credit</div><div style="font-size:18px;font-weight:700;color:#818cf8">₹${adv.toLocaleString('en-IN')}</div></div>`:''}
+    </div>`;
+}
+async function submitEdit(e){
+  e.preventDefault(); if(!editBid)return;
+  const body={total_meals:parseInt(document.getElementById('em-meals').value)||0,cost_per_meal:parseFloat(document.getElementById('em-rate').value)||0,paid_amount:parseFloat(document.getElementById('em-paid').value)||0,payment_status:document.getElementById('em-status').value};
+  try{ await api.put('/billing/'+editBid,body); showToast('Bill updated ✅','success'); closeEdit(); load(); }
+  catch(e){ showToast(e.message,'error'); }
+}
+</script>
+</body>
+</html>

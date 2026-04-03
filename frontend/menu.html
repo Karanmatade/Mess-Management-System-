@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weekly Menu — MessAdmin</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="brand-icon">🍽️</div><div class="brand-text"><span class="brand-name">MessAdmin</span><span class="brand-sub">Hostel System</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="dashboard.html"  class="nav-link"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="students.html"   class="nav-link"><span class="nav-icon">👨‍🎓</span>Students</a>
+    <a href="attendance.html" class="nav-link"><span class="nav-icon">✅</span>Attendance</a>
+    <div class="nav-section-label">Operations</div>
+    <a href="menu.html"       class="nav-link"><span class="nav-icon">🍱</span>Weekly Menu</a>
+    <a href="billing.html"    class="nav-link"><span class="nav-icon">💰</span>Billing</a>
+    <div class="nav-section-label">Analytics</div>
+    <a href="reports.html"    class="nav-link"><span class="nav-icon">📈</span>Reports</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user"><div class="user-avatar" id="sidebar-avatar">A</div><div><div class="user-name" id="sidebar-username">Admin</div><div class="user-role" id="sidebar-role">Administrator</div></div></div>
+    <button class="btn btn-outline btn-sm w-100 mt-16" id="logout-btn">🚪 Logout</button>
+  </div>
+</aside>
+
+<div class="main-content">
+  <header class="topbar">
+    <h1 class="page-title">🍱 Weekly Menu</h1>
+    <div class="topbar-right">
+      <button class="btn btn-primary btn-sm" onclick="saveAll()">💾 Save All Changes</button>
+    </div>
+  </header>
+
+  <div class="content-wrap">
+    <div id="menu-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px"></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+requireAuth();
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const DAY_ICONS = {Monday:'🌙',Tuesday:'🌟',Wednesday:'🌈',Thursday:'⚡',Friday:'🎉',Saturday:'🎊',Sunday:'☀️'};
+let menuData = {};
+
+async function loadMenu() {
+  try {
+    const rows = await api.get('/menu/');
+    menuData = {};
+    rows.forEach(r => menuData[r.day] = r);
+    renderMenu();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+function renderMenu() {
+  const today = new Date().toLocaleDateString('en-US',{weekday:'long'});
+  document.getElementById('menu-grid').innerHTML = DAYS.map(day => {
+    const m = menuData[day] || {};
+    const isToday = day === today;
+    return `
+    <div class="glass-card${isToday?' slide-in':''}" style="padding:22px;${isToday?'border-color:var(--primary);':''}">
+      <div class="flex-between mb-16">
+        <h3 style="font-size:16px">${DAY_ICONS[day]||'📅'} ${day}</h3>
+        ${isToday?'<span class="badge badge-info">Today</span>':''}
+      </div>
+      <div class="form-group">
+        <label class="form-label">🌅 Breakfast</label>
+        <textarea class="form-control" id="b-${day}" rows="2" placeholder="e.g. Poha, Chai, Fruit">${m.breakfast||''}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">☀️ Lunch</label>
+        <textarea class="form-control" id="l-${day}" rows="2" placeholder="e.g. Dal, Rice, Roti, Sabzi">${m.lunch||''}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">🌙 Dinner</label>
+        <textarea class="form-control" id="d-${day}" rows="2" placeholder="e.g. Paneer, Naan, Salad">${m.dinner||''}</textarea>
+      </div>
+      <button class="btn btn-outline btn-sm w-100" onclick="saveDay('${day}')">💾 Save ${day}</button>
+    </div>`;
+  }).join('');
+}
+
+async function saveDay(day) {
+  const body = {
+    breakfast: document.getElementById(`b-${day}`).value.trim(),
+    lunch:     document.getElementById(`l-${day}`).value.trim(),
+    dinner:    document.getElementById(`d-${day}`).value.trim(),
+  };
+  try {
+    await api.put('/menu/' + day, body);
+    showToast(`${day} menu saved ✅`, 'success');
+    menuData[day] = { ...menuData[day], ...body };
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function saveAll() {
+  const items = DAYS.map(day => ({
+    day,
+    breakfast: document.getElementById(`b-${day}`)?.value.trim() || '',
+    lunch:     document.getElementById(`l-${day}`)?.value.trim() || '',
+    dinner:    document.getElementById(`d-${day}`)?.value.trim() || '',
+  }));
+  try {
+    await api.put('/menu/bulk', items);
+    showToast('Full week menu saved ✅','success');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+loadMenu();
+</script>
+</body>
+</html>

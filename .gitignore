@@ -1,0 +1,9 @@
+backend/venv/
+backend/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+att.json
+test.txt
+screen.png

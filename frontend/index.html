@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login — Mess Management System</title>
+<meta name="description" content="Hostel Mess Management System — Admin Login">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+</style>
+</head>
+<body>
+<div class="login-page">
+  <div class="login-bg-orbs">
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+  </div>
+  <div class="glass-card login-card slide-in">
+    <div class="login-logo">
+      <div class="brand-icon">🍽️</div>
+      <h1>MessAdmin</h1>
+      <p>Hostel Mess Management System</p>
+    </div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input type="text" id="username" class="form-control" placeholder="Enter username" autocomplete="username" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <div style="position:relative">
+          <input type="password" id="password" class="form-control" placeholder="Enter password" autocomplete="current-password" required style="padding-right:44px">
+          <button type="button" id="pwd-toggle" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px">👁️</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-lg w-100 mt-16" id="login-btn">
+        <span id="login-label">Login to Dashboard</span>
+        <span id="login-spinner" class="hidden" style="width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block"></span>
+      </button>
+    </form>
+
+    <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-muted)">
+      Default credentials: <strong>admin</strong> / <strong>admin@123</strong>
+    </p>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+  // If already logged in, redirect
+  if (getToken()) window.location.href = 'dashboard.html';
+
+  document.getElementById('pwd-toggle').addEventListener('click', function() {
+    const p = document.getElementById('password');
+    p.type = p.type === 'password' ? 'text' : 'password';
+  });
+
+  document.getElementById('login-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn  = document.getElementById('login-btn');
+    const lbl  = document.getElementById('login-label');
+    const spin = document.getElementById('login-spinner');
+    btn.disabled = true; lbl.textContent = 'Logging in…'; spin.classList.remove('hidden');
+
+    try {
+      const data = await api.post('/auth/login', {
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value,
+      });
+      localStorage.setItem('mm_token', data.token);
+      localStorage.setItem('mm_user', JSON.stringify({ username: data.username }));
+      showToast('Welcome back, ' + data.username + '! 🎉', 'success');
+      setTimeout(() => window.location.href = 'dashboard.html', 800);
+    } catch (err) {
+      showToast(err.message || 'Login failed', 'error');
+      btn.disabled = false; lbl.textContent = 'Login to Dashboard'; spin.classList.add('hidden');
+    }
+  });
+</script>
+</body>
+</html>

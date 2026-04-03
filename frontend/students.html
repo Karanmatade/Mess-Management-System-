@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Students — MessAdmin</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.stats-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.stat-chip{display:flex;align-items:center;gap:14px;padding:18px 22px;border-radius:var(--radius-md)}
+.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.stat-lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.7px}
+.stat-val{font-size:28px;font-weight:800;font-family:'Outfit',sans-serif}
+.s-avatar{width:38px;height:38px;border-radius:50%;background:var(--gradient-btn);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+.name-cell{display:flex;align-items:center;gap:10px}
+.count-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--primary);color:#fff;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;margin-left:8px}
+.fee-badge{background:rgba(245,158,11,.18);color:#fbbf24;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600}
+@keyframes rowIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
+@keyframes rowOut{to{opacity:0;transform:translateX(20px);max-height:0}}
+.row-in{animation:rowIn .35s cubic-bezier(.34,1.56,.64,1)}
+.row-out{animation:rowOut .28s ease forwards}
+mark{background:rgba(99,102,241,.35);color:#fff;border-radius:3px;padding:0 2px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.span2{grid-column:1/-1}
+.csv-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border-glass);background:rgba(255,255,255,.06);color:var(--text-secondary);text-decoration:none;transition:var(--transition)}
+.csv-btn:hover{background:rgba(16,185,129,.18);border-color:#10b981;color:#34d399}
+</style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="brand-icon">🍽️</div><div class="brand-text"><span class="brand-name">MessAdmin</span><span class="brand-sub">Hostel System</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="dashboard.html" class="nav-link"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="students.html"  class="nav-link"><span class="nav-icon">👨‍🎓</span>Students</a>
+    <a href="attendance.html"class="nav-link"><span class="nav-icon">✅</span>Attendance</a>
+    <div class="nav-section-label">Operations</div>
+    <a href="menu.html"      class="nav-link"><span class="nav-icon">🍱</span>Weekly Menu</a>
+    <a href="billing.html"   class="nav-link"><span class="nav-icon">💰</span>Billing</a>
+    <div class="nav-section-label">Analytics</div>
+    <a href="reports.html"   class="nav-link"><span class="nav-icon">📈</span>Reports</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user"><div class="user-avatar" id="sidebar-avatar">A</div><div><div class="user-name" id="sidebar-username">Admin</div><div class="user-role" id="sidebar-role">Administrator</div></div></div>
+    <button class="btn btn-outline btn-sm w-100 mt-16" id="logout-btn">🚪 Logout</button>
+  </div>
+</aside>
+
+<div class="main-content">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button id="sidebar-toggle" style="background:none;border:none;color:var(--text-primary);font-size:22px;cursor:pointer">☰</button>
+      <h1 class="page-title">👨‍🎓 Students <span class="count-badge" id="total-count">0</span></h1>
+    </div>
+    <div class="topbar-right" style="gap:8px">
+      <a id="csv-all-btn" class="csv-btn" href="#" onclick="exportAllCSV(event)">📥 Export All CSV</a>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()">➕ Add Student</button>
+    </div>
+  </header>
+
+  <div class="content-wrap">
+    <div class="stats-strip">
+      <div class="glass-card stat-chip">
+        <div class="stat-icon" style="background:rgba(99,102,241,.2)">👨‍🎓</div>
+        <div><div class="stat-lbl">Total Students</div><div class="stat-val" id="st-total">—</div></div>
+      </div>
+      <div class="glass-card stat-chip">
+        <div class="stat-icon" style="background:rgba(16,185,129,.2)">✅</div>
+        <div><div class="stat-lbl">Active</div><div class="stat-val" id="st-active" style="color:var(--success)">—</div></div>
+      </div>
+      <div class="glass-card stat-chip">
+        <div class="stat-icon" style="background:rgba(239,68,68,.2)">⛔</div>
+        <div><div class="stat-lbl">Inactive</div><div class="stat-val" id="st-inactive" style="color:var(--danger)">—</div></div>
+      </div>
+    </div>
+
+    <div class="glass-card" style="padding:22px">
+      <div class="section-header">
+        <div class="search-bar" style="flex:1;max-width:400px">
+          <span>🔍</span>
+          <input type="text" id="search-input" placeholder="Search name, room, email…" oninput="handleSearch(this.value)">
+          <button id="clr" style="background:none;border:none;color:var(--text-muted);cursor:pointer;display:none" onclick="clearSearch()">✕</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <select class="form-control" id="sf" style="width:130px" onchange="applyFilter()">
+            <option value="">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option>
+          </select>
+          <button class="btn btn-outline btn-sm" onclick="load(true)" title="Refresh">🔄</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>#</th><th>Student</th><th>Room</th><th>Phone</th><th>Monthly Fee</th><th>Joined</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div id="empty" class="hidden" style="text-align:center;padding:48px">
+        <div style="font-size:56px;margin-bottom:12px">🎓</div>
+        <h3>No students found</h3>
+        <p style="color:var(--text-muted);margin:8px 0 20px;font-size:14px">Add your first resident</p>
+        <button class="btn btn-primary" onclick="openAddModal()">➕ Add Student</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="smodal" onclick="if(event.target===this)closeModal()">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="mavatar" style="width:40px;height:40px;border-radius:10px;background:var(--gradient-btn);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#fff">?</div>
+        <h3 class="modal-title" id="mtitle">Add New Student</h3>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <form id="sform" onsubmit="submitForm(event)" novalidate>
+      <div class="form-grid">
+        <div class="form-group span2">
+          <label class="form-label">Full Name *</label>
+          <input type="text" id="fn" class="form-control" placeholder="e.g. Aarav Sharma" required oninput="updateAvatar(this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Room No *</label>
+          <input type="text" id="fr" class="form-control" placeholder="e.g. A-101" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Student Phone</label>
+          <input type="tel" id="fp" class="form-control" placeholder="9876543210" maxlength="15">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Parent Phone</label>
+          <input type="tel" id="fpp" class="form-control" placeholder="Parent mobile" maxlength="15">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="fe" class="form-control" placeholder="student@example.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Monthly Mess Fee (₹)</label>
+          <input type="number" id="ff" class="form-control" placeholder="1800" min="0" step="50" value="1800">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Join Date</label>
+          <input type="date" id="fjd" class="form-control" required>
+        </div>
+        <div class="form-group span2">
+          <label class="form-label">Status</label>
+          <select id="fst" class="form-control"><option value="active">✅ Active</option><option value="inactive">⛔ Inactive</option></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="savebtn">
+          <span id="slabel">💾 Save</span>
+          <span id="sspin" class="hidden" style="width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="dmodal" onclick="if(event.target===this)closeDel()">
+  <div class="modal" style="max-width:380px;text-align:center">
+    <div style="font-size:52px;margin-bottom:12px">🗑️</div>
+    <h3 style="margin-bottom:8px">Delete Student?</h3>
+    <p style="color:var(--text-secondary);font-size:14px;margin-bottom:6px">Removing:</p>
+    <p id="dname" style="font-size:16px;font-weight:700;margin-bottom:14px">—</p>
+    <p style="color:var(--danger);font-size:13px;margin-bottom:24px">⚠️ All attendance &amp; billing records will also be deleted.</p>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn btn-outline" onclick="closeDel()">Cancel</button>
+      <button class="btn btn-danger" id="delbtn" onclick="confirmDel()">
+        <span id="dlbl">🗑️ Delete</span>
+        <span id="dspin" class="hidden" style="width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+requireAuth();
+let all=[], filtered=[], editId=null, delTarget=null, q='', timer;
+
+load();
+setInterval(()=>load(false),30000);
+
+async function load(spinner=true){
+  if(spinner) setTbody('<tr><td colspan="7"><div class="page-loader"><div class="spinner"></div><span>Loading…</span></div></td></tr>');
+  try{ all=await api.get('/students/'); applyFilter(); updateStats(); }
+  catch(e){ showToast(e.message,'error'); }
+}
+
+function applyFilter(){
+  const sv=document.getElementById('sf').value;
+  filtered=all.filter(s=>(!sv||s.status===sv)&&(!q||[s.name,s.room_no,s.email||'',s.phone||''].some(v=>v.toLowerCase().includes(q))));
+  render();
+}
+
+function handleSearch(v){ q=v.toLowerCase(); document.getElementById('clr').style.display=v?'inline':'none'; clearTimeout(timer); timer=setTimeout(applyFilter,200); }
+function clearSearch(){ document.getElementById('search-input').value=''; q=''; document.getElementById('clr').style.display='none'; applyFilter(); }
+
+function render(hl=null){
+  const empty=document.getElementById('empty');
+  if(!filtered.length){ setTbody(''); empty.classList.remove('hidden'); updateCount(0); return; }
+  empty.classList.add('hidden'); updateCount(filtered.length);
+  const hi=(txt)=>q?String(txt||'').replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<mark>$1</mark>'):String(txt||'');
+  
+  const now = Date.now();
+  
+  setTbody(filtered.map((s,i)=>{
+    const ini=s.name.split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const daysDiff = Math.floor((now - new Date(s.join_date).getTime()) / (1000*60*60*24));
+    const cycleDays = daysDiff % 30; // 0, 1, 2 = exactly completed a month!
+    const isDue = s.status === 'active' && daysDiff > 0 && cycleDays >= 0 && cycleDays <= 3;
+    const alertHtml = isDue ? `<div style="margin-top:4px"><span class="badge badge-danger" style="font-size:10px;padding:2px 6px">⚠️ 30 Days Due</span></div>` : '';
+
+    return `<tr id="r${s.id}" class="${s.id===hl?'row-in':''}">
+      <td style="color:var(--text-muted);font-size:13px">${i+1}</td>
+      <td><div class="name-cell">
+        <div class="s-avatar">${ini}</div>
+        <div><div style="font-weight:600;font-size:14px">${hi(s.name)}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${hi(s.email)}</div></div>
+      </div></td>
+      <td><span class="badge badge-info">${hi(s.room_no)}</span></td>
+      <td style="font-size:13px">${hi(s.phone||'—')}</td>
+      <td><span class="fee-badge">₹${Number(s.monthly_fee).toLocaleString('en-IN')}/mo</span></td>
+      <td style="font-size:12px;color:var(--text-secondary)">${hi(s.join_date)}${alertHtml}</td>
+      <td><button class="badge badge-${s.status==='active'?'success':'danger'}" style="cursor:pointer;border:none;font-size:11px" onclick="toggleSt(${s.id},'${s.status}')">${s.status==='active'?'✅ Active':'⛔ Inactive'}</button></td>
+      <td><div style="display:flex;gap:6px;justify-content:flex-end">
+        <a class="csv-btn" href="#" onclick="exportOne(event,${s.id})" title="Download Report">📄</a>
+        <button class="btn btn-outline btn-sm" onclick="openEdit(${s.id})">✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="openDel(${s.id},'${s.name.replace(/'/g,"\\'")}')">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join(''));
+}
+
+function setTbody(h){ document.getElementById('tbody').innerHTML=h; }
+function updateStats(){ const a=all.filter(s=>s.status==='active').length; document.getElementById('st-total').textContent=all.length; document.getElementById('st-active').textContent=a; document.getElementById('st-inactive').textContent=all.length-a; }
+function updateCount(n){ document.getElementById('total-count').textContent=n; }
+
+// ── CSV exports ─────────────────────────────────────────────
+function exportAllCSV(e){
+  e.preventDefault();
+  const token=localStorage.getItem('mm_token');
+  fetch('http://localhost:5000/api/students/export/csv',{headers:{Authorization:'Bearer '+token}})
+    .then(r=>r.blob()).then(b=>{
+      const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+      a.download='all_students.csv'; a.click();
+    }).catch(err=>showToast('Export failed','error'));
+}
+function exportOne(e,sid){
+  e.preventDefault();
+  const token=localStorage.getItem('mm_token');
+  fetch(`http://localhost:5000/api/students/${sid}/export/csv`,{headers:{Authorization:'Bearer '+token}})
+    .then(r=>r.blob()).then(b=>{
+      const a=document.createElement('a'); a.href=URL.createObjectURL(b);
+      const s=all.find(x=>x.id===sid); a.download=(s?s.name.replace(/ /g,'_'):'student')+'_report.csv'; a.click();
+    }).catch(err=>showToast('Export failed','error'));
+}
+
+// ── Add/Edit ─────────────────────────────────────────────────
+function openAddModal(){ editId=null; resetForm(); document.getElementById('mtitle').textContent='Add New Student'; document.getElementById('slabel').textContent='💾 Save'; document.getElementById('fjd').value=todayISO(); showModal('smodal'); setTimeout(()=>document.getElementById('fn').focus(),100); }
+function openEdit(id){ const s=all.find(x=>x.id===id); if(!s)return; editId=id; resetForm(); document.getElementById('fn').value=s.name; document.getElementById('fr').value=s.room_no; document.getElementById('fp').value=s.phone||''; document.getElementById('fpp').value=s.parent_phone||''; document.getElementById('fe').value=s.email||''; document.getElementById('ff').value=s.monthly_fee||1800; document.getElementById('fjd').value=s.join_date; document.getElementById('fst').value=s.status; const ini=s.name.split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase(); document.getElementById('mavatar').textContent=ini; document.getElementById('mtitle').textContent='Edit — '+s.name; document.getElementById('slabel').textContent='✏️ Update'; showModal('smodal'); }
+function closeModal(){ hideModal('smodal'); }
+function updateAvatar(v){ const i=v.trim().split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase(); document.getElementById('mavatar').textContent=i||'?'; }
+function resetForm(){ document.getElementById('sform').reset(); document.getElementById('mavatar').textContent='?'; document.getElementById('ff').value=1800; document.getElementById('fjd').value=todayISO(); }
+
+async function submitForm(e){
+  e.preventDefault();
+  const name=document.getElementById('fn').value.trim(), room=document.getElementById('fr').value.trim(), jd=document.getElementById('fjd').value;
+  if(!name||!room||!jd){ showToast('Name, Room, and Join Date are required','warning'); return; }
+  const body={name,room_no:room,phone:document.getElementById('fp').value.trim(),parent_phone:document.getElementById('fpp').value.trim(),email:document.getElementById('fe').value.trim(),join_date:jd,monthly_fee:parseFloat(document.getElementById('ff').value)||1800,status:document.getElementById('fst').value};
+  setSpin('savebtn','slabel','sspin',true);
+  try{
+    if(editId){ await api.put('/students/'+editId,body); const idx=all.findIndex(s=>s.id===editId); if(idx!==-1)all[idx]={...all[idx],...body}; applyFilter(); updateStats(); showToast('✏️ Updated!','success'); closeModal(); }
+    else{ const res=await api.post('/students/',body); all.unshift({id:res.id,...body,created_at:new Date().toISOString()}); applyFilter(); updateStats(); showToast('✅ Added!','success'); closeModal(); setTimeout(()=>{ const r=document.getElementById('r'+res.id); if(r)r.classList.add('row-in'); },50); }
+  }catch(err){ showToast(err.message,'error'); }
+  setSpin('savebtn','slabel','sspin',false);
+}
+
+// ── Delete ────────────────────────────────────────────────────
+function openDel(id,name){ delTarget={id,name}; document.getElementById('dname').textContent=name; showModal('dmodal'); }
+function closeDel(){ hideModal('dmodal'); delTarget=null; }
+async function confirmDel(){
+  if(!delTarget)return; setSpin('delbtn','dlbl','dspin',true);
+  const row=document.getElementById('r'+delTarget.id);
+  if(row){ row.classList.add('row-out'); await new Promise(r=>setTimeout(r,260)); }
+  try{ await api.delete('/students/'+delTarget.id); all=all.filter(s=>s.id!==delTarget.id); applyFilter(); updateStats(); showToast('🗑️ Deleted!','success'); closeDel(); }
+  catch(err){ showToast(err.message,'error'); if(row)row.classList.remove('row-out'); }
+  setSpin('delbtn','dlbl','dspin',false);
+}
+
+// ── Status toggle ─────────────────────────────────────────────
+async function toggleSt(id,cur){
+  try{ await api.patch('/students/'+id+'/toggle-status'); const s=all.find(x=>x.id===id); if(s)s.status=cur==='active'?'inactive':'active'; applyFilter(); updateStats(); showToast('Status updated','success'); }
+  catch(err){ showToast(err.message,'error'); }
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function showModal(id){ document.getElementById(id).classList.add('show'); }
+function hideModal(id){ document.getElementById(id).classList.remove('show'); }
+function setSpin(btn,lbl,spin,on){ document.getElementById(btn).disabled=on; document.getElementById(spin).classList.toggle('hidden',!on); }
+</script>
+</body>
+</html>

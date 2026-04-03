@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-lowest": "#0e0e0e",
+                    "inverse-primary": "#006e2f",
+                    "primary": "#4be277",
+                    "surface-container-high": "#2a2a2a",
+                    "on-secondary": "#68001a",
+                    "surface-container-low": "#1c1b1b",
+                    "outline": "#869585",
+                    "on-primary-fixed-variant": "#005321",
+                    "surface-container-highest": "#353534",
+                    "surface-container": "#201f1f",
+                    "on-surface": "#e5e2e1",
+                    "inverse-surface": "#e5e2e1",
+                    "background": "#131313",
+                    "on-tertiary-fixed": "#410001",
+                    "on-surface-variant": "#bccbb9",
+                    "on-tertiary": "#60130d",
+                    "inverse-on-surface": "#313030",
+                    "tertiary-fixed": "#ffdad5",
+                    "tertiary": "#ffb5ab",
+                    "on-primary": "#003915",
+                    "secondary": "#ffb3b6",
+                    "surface-bright": "#3a3939",
+                    "tertiary-container": "#ff8b7c",
+                    "on-error": "#690005",
+                    "secondary-fixed-dim": "#ffb3b6",
+                    "on-background": "#e5e2e1",
+                    "on-tertiary-fixed-variant": "#7f2a21",
+                    "outline-variant": "#3d4a3d",
+                    "on-error-container": "#ffdad6",
+                    "on-secondary-container": "#ffdcdc",
+                    "on-secondary-fixed-variant": "#920028",
+                    "primary-container": "#22c55e",
+                    "on-tertiary-container": "#76231b",
+                    "on-secondary-fixed": "#40000c",
+                    "secondary-container": "#cc003c",
+                    "secondary-fixed": "#ffdada",
+                    "surface-tint": "#4ae176",
+                    "surface": "#131313",
+                    "surface-dim": "#131313",
+                    "error": "#ffb4ab",
+                    "tertiary-fixed-dim": "#ffb4a9",
+                    "on-primary-container": "#004b1e",
+                    "primary-fixed": "#6bff8f",
+                    "primary-fixed-dim": "#4ae176",
+                    "surface-variant": "#353534",
+                    "error-container": "#93000a",
+                    "on-primary-fixed": "#002109"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(42, 42, 42, 0.6);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+        }
+        .today-glow {
+            box-shadow: 0 0 20px 2px rgba(75, 226, 119, 0.15);
+        }
+        body {
+            background-color: #131313;
+            color: #e5e2e1;
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3, .brand-font {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="antialiased">
+<!-- SideNavBar (Authority Source: JSON) -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-neutral-950/80 backdrop-blur-xl shadow-[4px_0_24px_rgba(0,0,0,0.5)] z-[60] flex flex-col py-8 font-['Plus_Jakarta_Sans'] font-medium tracking-tight">
+<div class="px-6 mb-10">
+<h1 class="text-2xl font-black tracking-tighter text-green-400">The Culinary Concierge</h1>
+<p class="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">Premium Mess Mgmt</p>
+</div>
+<nav class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/40 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/40 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Students</span>
+</a>
+<!-- ACTIVE TAB: Menu -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-green-400 bg-neutral-900/50 font-semibold border-r-2 border-green-500 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="restaurant_menu">restaurant_menu</span>
+<span>Menu</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/40 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="event_available">event_available</span>
+<span>Attendance</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/40 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span>Billing</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/40 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>Reports</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/40 transition-all duration-300 mt-8" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="px-6 pt-6">
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold py-3 px-4 rounded-xl scale-95 active:scale-90 transition-transform">
+                Verify Student ID
+            </button>
+</div>
+</aside>
+<!-- TopNavBar (Authority Source: JSON) -->
+<header class="h-20 w-[calc(100%-16rem)] fixed top-0 right-0 z-50 bg-neutral-900/40 backdrop-blur-md flex items-center justify-between px-8 font-['Plus_Jakarta_Sans'] text-sm">
+<div class="flex items-center gap-6">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-neutral-400">search</span>
+<input class="bg-surface-container-highest/30 border-none rounded-full py-2 pl-10 pr-4 w-64 focus:ring-1 focus:ring-primary text-on-surface" placeholder="Search menu items..." type="text"/>
+</div>
+<div class="h-4 w-[1px] bg-neutral-700"></div>
+<span class="text-green-400 font-bold">Mess Portal</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<button class="p-2 rounded-full hover:bg-neutral-800/60 transition-colors opacity-80 active:opacity-100">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-neutral-800/60 transition-colors opacity-80 active:opacity-100">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+</button>
+</div>
+<div class="flex items-center gap-3 border-l border-neutral-800 pl-6">
+<div class="text-right">
+<p class="text-on-surface font-bold">Admin User</p>
+<p class="text-[10px] text-neutral-500 uppercase tracking-tighter">Kitchen Head</p>
+</div>
+<img alt="Admin User" class="w-10 h-10 rounded-full border border-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDTMuzM8vkafTzmxpf8vKNMPCwtrv4zEqTslMBVR2U5qqsZG-ya2ATHdlZ112bkR-umPIBfhB6EQBEZMibjcYwI4LgU1Mu5zaVvbVdjjMG3m4srXwbJM89QRixC7LcJ2mkqAx8L87_ljIfntntP056K2q3NTlxc0j9-zH9yAuVMsbSP_0xPhJiNXn-mW09nXVpefguv0GDhRVQQE3DMHfA8IolKiwWDYhYRb0rh5naBamdTMTP9MdVM3Wt8DGKni3CmAXkBHXM3x7YH"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="ml-64 pt-28 pb-12 px-10">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-10">
+<div>
+<h2 class="text-5xl font-extrabold tracking-tighter text-on-surface leading-none mb-2">Weekly Gastronomy</h2>
+<p class="text-on-surface-variant font-medium">Curated nutritional balance for March 11 - March 17</p>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-high hover:bg-surface-bright text-on-surface px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">download</span> Export PDF
+                </button>
+<button class="bg-gradient-to-br from-primary to-primary-container text-on-primary px-5 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-primary/10">
+                    Update All Menus
+                </button>
+</div>
+</div>
+<!-- Weekly Carousel/Selector -->
+<div class="flex gap-4 mb-12 overflow-x-auto no-scrollbar pb-2">
+<button class="flex-none px-8 py-3 rounded-full bg-surface-bright text-primary font-bold border border-primary/20">Current Week</button>
+<button class="flex-none px-8 py-3 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-all">Next Week</button>
+<button class="flex-none px-8 py-3 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface transition-all">Archived (Feb)</button>
+</div>
+<!-- Asymmetric Bento Grid for Days -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Monday - Featured Wide -->
+<div class="lg:col-span-8 group">
+<div class="glass-card today-glow p-8 rounded-[2rem] border border-primary/20 relative overflow-hidden h-full">
+<div class="absolute top-0 right-0 p-6">
+<span class="bg-primary/20 text-primary text-xs font-black uppercase tracking-widest px-4 py-1.5 rounded-full">Today</span>
+</div>
+<div class="flex items-center gap-4 mb-8">
+<h3 class="text-4xl font-black tracking-tighter">Monday</h3>
+<span class="text-on-surface-variant/40 font-light text-2xl">/ 11 Mar</span>
+</div>
+<div class="grid md:grid-cols-3 gap-8">
+<!-- Breakfast -->
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-primary font-bold uppercase tracking-widest text-[10px]">Breakfast</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-sm">edit_note</span>
+</button>
+</div>
+<div class="space-y-1">
+<h4 class="text-xl font-bold">Indori Poha</h4>
+<p class="text-sm text-on-surface-variant">Jalebi, Sev, &amp; Masala Chai</p>
+</div>
+</div>
+<!-- Lunch -->
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-primary font-bold uppercase tracking-widest text-[10px]">Lunch</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-sm">edit_note</span>
+</button>
+</div>
+<div class="space-y-1">
+<h4 class="text-xl font-bold">Paneer Butter Masala</h4>
+<p class="text-sm text-on-surface-variant">Butter Naan, Jeera Rice, &amp; Boondi Raita</p>
+</div>
+</div>
+<!-- Dinner -->
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-primary font-bold uppercase tracking-widest text-[10px]">Dinner</span>
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined text-sm">edit_note</span>
+</button>
+</div>
+<div class="space-y-1">
+<h4 class="text-xl font-bold">Daal Makhani</h4>
+<p class="text-sm text-on-surface-variant">Phulka, Mixed Veg, &amp; Gulab Jamun</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Tuesday -->
+<div class="lg:col-span-4 group">
+<div class="glass-card p-8 rounded-[2rem] border border-outline-variant/10 hover:border-primary/30 transition-all h-full">
+<div class="flex items-baseline gap-3 mb-8">
+<h3 class="text-3xl font-bold tracking-tight">Tuesday</h3>
+<span class="text-on-surface-variant/40 text-sm">/ 12 Mar</span>
+</div>
+<div class="space-y-8">
+<div class="relative pl-6 before:content-[''] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2px] before:bg-primary/20">
+<span class="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold block mb-1">Morning</span>
+<p class="font-bold">Aloo Paratha &amp; Curd</p>
+</div>
+<div class="relative pl-6 before:content-[''] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2px] before:bg-primary/20">
+<span class="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold block mb-1">Afternoon</span>
+<p class="font-bold">Rajma Chawal &amp; Salad</p>
+</div>
+<div class="relative pl-6 before:content-[''] before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[2px] before:bg-primary/20">
+<span class="text-[9px] uppercase tracking-widest text-on-surface-variant font-bold block mb-1">Night</span>
+<p class="font-bold">Baingan Bharta &amp; Roti</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Wednesday -->
+<div class="lg:col-span-4 group">
+<div class="glass-card p-8 rounded-[2rem] border border-outline-variant/10 hover:border-primary/30 transition-all">
+<div class="flex items-baseline gap-3 mb-8">
+<h3 class="text-3xl font-bold tracking-tight">Wednesday</h3>
+<span class="text-on-surface-variant/40 text-sm">/ 13 Mar</span>
+</div>
+<div class="space-y-6">
+<div>
+<span class="text-primary font-bold text-xs">Breakfast</span>
+<p class="font-semibold text-lg">Idli Sambhar</p>
+</div>
+<div>
+<span class="text-primary font-bold text-xs">Lunch</span>
+<p class="font-semibold text-lg">Chole Bhature</p>
+</div>
+<div>
+<span class="text-primary font-bold text-xs">Dinner</span>
+<p class="font-semibold text-lg">Egg Curry / Matar Paneer</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Thursday -->
+<div class="lg:col-span-4 group">
+<div class="glass-card p-8 rounded-[2rem] border border-outline-variant/10 hover:border-primary/30 transition-all">
+<div class="flex items-baseline gap-3 mb-8">
+<h3 class="text-3xl font-bold tracking-tight">Thursday</h3>
+<span class="text-on-surface-variant/40 text-sm">/ 14 Mar</span>
+</div>
+<div class="space-y-6">
+<div>
+<span class="text-primary font-bold text-xs">Breakfast</span>
+<p class="font-semibold text-lg">Upma &amp; Chutney</p>
+</div>
+<div>
+<span class="text-primary font-bold text-xs">Lunch</span>
+<p class="font-semibold text-lg">Kadai Chicken / Veg Kofta</p>
+</div>
+<div>
+<span class="text-primary font-bold text-xs">Dinner</span>
+<p class="font-semibold text-lg">Khichdi &amp; Kadhi</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Friday -->
+<div class="lg:col-span-4 group">
+<div class="glass-card p-8 rounded-[2rem] border border-outline-variant/10 hover:border-primary/30 transition-all">
+<div class="flex items-baseline gap-3 mb-8">
+<h3 class="text-3xl font-bold tracking-tight">Friday</h3>
+<span class="text-on-surface-variant/40 text-sm">/ 15 Mar</span>
+</div>
+<div class="space-y-6">
+<div>
+<span class="text-primary font-bold text-xs">Breakfast</span>
+<p class="font-semibold text-lg">Puri Bhaji</p>
+</div>
+<div>
+<span class="text-primary font-bold text-xs">Lunch</span>
+<p class="font-semibold text-lg">Hyderabadi Biryani</p>
+</div>
+<div>
+<span class="text-primary font-bold text-xs">Dinner</span>
+<p class="font-semibold text-lg">Bhindi Fry &amp; Paratha</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Weekend Double Card -->
+<div class="lg:col-span-12">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Saturday -->
+<div class="glass-card p-10 rounded-[2.5rem] border-l-4 border-l-primary/40 bg-gradient-to-br from-surface-container-high/60 to-surface-container-low/40 relative overflow-hidden">
+<div class="absolute -right-12 -bottom-12 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[12rem]" data-icon="weekend">weekend</span>
+</div>
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-4xl font-black text-on-surface tracking-tighter">Saturday</h3>
+<button class="bg-surface-container-highest p-3 rounded-full">
+<span class="material-symbols-outlined text-on-surface-variant">more_vert</span>
+</button>
+</div>
+<div class="flex gap-12">
+<div>
+<span class="block text-primary text-[10px] uppercase font-black tracking-widest mb-2">Brunch Special</span>
+<p class="text-2xl font-bold">Misal Pav &amp; Butter Milk</p>
+</div>
+<div class="h-16 w-[1px] bg-outline-variant/20"></div>
+<div>
+<span class="block text-primary text-[10px] uppercase font-black tracking-widest mb-2">Dinner</span>
+<p class="text-2xl font-bold">Malai Kofta &amp; Jeera Naan</p>
+</div>
+</div>
+</div>
+<!-- Sunday -->
+<div class="glass-card p-10 rounded-[2.5rem] border-r-4 border-r-secondary/40 bg-gradient-to-bl from-surface-container-high/60 to-surface-container-low/40 relative overflow-hidden">
+<div class="absolute -left-12 -bottom-12 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[12rem]" data-icon="celebration">celebration</span>
+</div>
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-4xl font-black text-on-surface tracking-tighter">Sunday</h3>
+<span class="bg-secondary/10 text-secondary text-[10px] font-black uppercase px-3 py-1 rounded-full">Special Feast</span>
+</div>
+<div class="flex gap-12">
+<div>
+<span class="block text-primary text-[10px] uppercase font-black tracking-widest mb-2">Lunch</span>
+<p class="text-2xl font-bold">Mutton Curry / Veg Special</p>
+</div>
+<div class="h-16 w-[1px] bg-outline-variant/20"></div>
+<div>
+<span class="block text-primary text-[10px] uppercase font-black tracking-widest mb-2">Dinner</span>
+<p class="text-2xl font-bold">Light Khichdi &amp; Fruit Cream</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Floating Stats Panel (Asymmetric) -->
+<div class="fixed bottom-10 right-10 flex gap-4 z-40">
+<div class="glass-card px-6 py-4 rounded-2xl border border-white/5 shadow-2xl flex items-center gap-6">
+<div class="flex flex-col">
+<span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest">Total Weekly Cal</span>
+<span class="text-2xl font-black text-primary">18,450 kcal</span>
+</div>
+<div class="w-[1px] h-8 bg-outline-variant/30"></div>
+<div class="flex flex-col">
+<span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-widest">Protein Goal</span>
+<div class="flex items-center gap-2">
+<div class="w-16 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[85%]"></div>
+</div>
+<span class="text-sm font-bold">85%</span>
+</div>
+</div>
+</div>
+<button class="w-14 h-14 bg-primary text-on-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+</main>
+</body></html>
