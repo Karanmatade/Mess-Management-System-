@@ -38,6 +38,8 @@ mark{background:rgba(99,102,241,.35);color:#fff;border-radius:3px;padding:0 2px}
     <a href="billing.html"   class="nav-link"><span class="nav-icon">💰</span>Billing</a>
     <div class="nav-section-label">Analytics</div>
     <a href="reports.html"   class="nav-link"><span class="nav-icon">📈</span>Reports</a>
+    <div class="nav-section-label">Admin</div>
+    <a href="settings.html"  class="nav-link"><span class="nav-icon">⚙️</span>Settings</a>
   </nav>
   <div class="sidebar-footer">
     <div class="sidebar-user"><div class="user-avatar" id="sidebar-avatar">A</div><div><div class="user-name" id="sidebar-username">Admin</div><div class="user-role" id="sidebar-role">Administrator</div></div></div>
@@ -131,15 +133,15 @@ mark{background:rgba(99,102,241,.35);color:#fff;border-radius:3px;padding:0 2px}
           <input type="tel" id="fpp" class="form-control" placeholder="Parent mobile" maxlength="15">
         </div>
         <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" id="fe" class="form-control" placeholder="student@example.com">
+          <label class="form-label">Email *</label>
+          <input type="email" id="fe" class="form-control" placeholder="student@example.com" required>
         </div>
         <div class="form-group">
           <label class="form-label">Monthly Mess Fee (₹)</label>
           <input type="number" id="ff" class="form-control" placeholder="1800" min="0" step="50" value="1800">
         </div>
         <div class="form-group">
-          <label class="form-label">Join Date</label>
+          <label class="form-label">Join Date *</label>
           <input type="date" id="fjd" class="form-control" required>
         </div>
         <div class="form-group span2">
@@ -270,12 +272,13 @@ function resetForm(){ document.getElementById('sform').reset(); document.getElem
 async function submitForm(e){
   e.preventDefault();
   const name=document.getElementById('fn').value.trim(), room=document.getElementById('fr').value.trim(), jd=document.getElementById('fjd').value;
-  if(!name||!room||!jd){ showToast('Name, Room, and Join Date are required','warning'); return; }
-  const body={name,room_no:room,phone:document.getElementById('fp').value.trim(),parent_phone:document.getElementById('fpp').value.trim(),email:document.getElementById('fe').value.trim(),join_date:jd,monthly_fee:parseFloat(document.getElementById('ff').value)||1800,status:document.getElementById('fst').value};
+  const email=document.getElementById('fe').value.trim();
+  if(!name||!room||!jd||!email){ showToast('Name, Room, Email and Join Date are required','warning'); return; }
+  const body={name,room_no:room,phone:document.getElementById('fp').value.trim(),parent_phone:document.getElementById('fpp').value.trim(),email:email,date_of_joining:jd,monthly_fee:parseFloat(document.getElementById('ff').value)||1800,status:document.getElementById('fst').value};
   setSpin('savebtn','slabel','sspin',true);
   try{
     if(editId){ await api.put('/students/'+editId,body); const idx=all.findIndex(s=>s.id===editId); if(idx!==-1)all[idx]={...all[idx],...body}; applyFilter(); updateStats(); showToast('✏️ Updated!','success'); closeModal(); }
-    else{ const res=await api.post('/students/',body); all.unshift({id:res.id,...body,created_at:new Date().toISOString()}); applyFilter(); updateStats(); showToast('✅ Added!','success'); closeModal(); setTimeout(()=>{ const r=document.getElementById('r'+res.id); if(r)r.classList.add('row-in'); },50); }
+    else{ const res=await api.post('/students/',body); all.unshift({id:res.id,...body}); applyFilter(); updateStats(); showToast('✅ Added!','success'); closeModal(); setTimeout(()=>{ const r=document.getElementById('r'+res.id); if(r)r.classList.add('row-in'); },50); }
   }catch(err){ showToast(err.message,'error'); }
   setSpin('savebtn','slabel','sspin',false);
 }

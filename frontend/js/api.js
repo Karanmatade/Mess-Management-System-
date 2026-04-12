@@ -13,10 +13,10 @@ async function apiFetch(path, options = {}) {
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
 
-  if (res.status === 401) {
+  if (res.status === 401 || res.status === 422) {
     localStorage.removeItem('mm_token');
     localStorage.removeItem('mm_user');
-    window.location.href = '/frontend/index.html';
+    window.location.href = 'index.html';
     return;
   }
 
@@ -35,7 +35,7 @@ const api = {
 
 /* ── Auth guard ─────────────────────────────────────────────────── */
 function requireAuth() {
-  if (!getToken()) { window.location.href = '/frontend/index.html'; }
+  if (!getToken()) { window.location.href = 'index.html'; }
 }
 
 function getUser() {

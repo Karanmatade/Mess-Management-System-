@@ -7,3 +7,7 @@ backend/__pycache__/
 att.json
 test.txt
 screen.png
+
+~$*.docx
+*.txt
+*.json

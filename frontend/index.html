@@ -15,6 +15,7 @@
   <div class="login-bg-orbs">
     <div class="orb orb1"></div>
     <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
   </div>
   <div class="glass-card login-card slide-in">
     <div class="login-logo">
@@ -25,8 +26,8 @@
 
     <form id="login-form">
       <div class="form-group">
-        <label class="form-label" for="username">Username</label>
-        <input type="text" id="username" class="form-control" placeholder="Enter username" autocomplete="username" required>
+        <label class="form-label" for="username">Username / Email</label>
+        <input type="text" id="username" class="form-control" placeholder="Enter admin username or student email" autocomplete="username" required>
       </div>
       <div class="form-group">
         <label class="form-label" for="password">Password</label>
@@ -36,22 +37,37 @@
         </div>
       </div>
       <button type="submit" class="btn btn-primary btn-lg w-100 mt-16" id="login-btn">
-        <span id="login-label">Login to Dashboard</span>
+        <span id="login-label" style="transform:translateZ(10px)">Login to Dashboard</span>
         <span id="login-spinner" class="hidden" style="width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block"></span>
       </button>
     </form>
 
-    <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-muted)">
-      Default credentials: <strong>admin</strong> / <strong>admin@123</strong>
+    <p style="text-align:center;margin-top:24px;font-size:12px;color:rgba(255,255,255,0.4);transform:translateZ(10px)">
+      Admin defaults: <strong style="color:rgba(255,255,255,0.7)">admin</strong> / <strong style="color:rgba(255,255,255,0.7)">admin@123</strong>
     </p>
   </div>
 </div>
 
 <div id="toast-container"></div>
+<!-- Vanilla Tilt for 3D premium effect -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
 <script src="js/api.js"></script>
 <script>
+  // Initialize 3D Glass Tilt Effect
+  VanillaTilt.init(document.querySelector(".login-card"), {
+    max: 15,
+    speed: 400,
+    glare: true,
+    "max-glare": 0.2,
+    gyroscope: true,
+    scale: 1.02
+  });
+
   // If already logged in, redirect
-  if (getToken()) window.location.href = 'dashboard.html';
+  if (getToken()) {
+    const user = getUser();
+    window.location.href = user.role === 'student' ? 'student-dashboard.html' : 'dashboard.html';
+  }
 
   document.getElementById('pwd-toggle').addEventListener('click', function() {
     const p = document.getElementById('password');
@@ -63,7 +79,7 @@
     const btn  = document.getElementById('login-btn');
     const lbl  = document.getElementById('login-label');
     const spin = document.getElementById('login-spinner');
-    btn.disabled = true; lbl.textContent = 'Logging in…'; spin.classList.remove('hidden');
+    btn.disabled = true; lbl.textContent = 'Authenticating…'; spin.classList.remove('hidden');
 
     try {
       const data = await api.post('/auth/login', {
@@ -71,11 +87,14 @@
         password: document.getElementById('password').value,
       });
       localStorage.setItem('mm_token', data.token);
-      localStorage.setItem('mm_user', JSON.stringify({ username: data.username }));
+      localStorage.setItem('mm_user', JSON.stringify({ username: data.username, role: data.role }));
       showToast('Welcome back, ' + data.username + '! 🎉', 'success');
-      setTimeout(() => window.location.href = 'dashboard.html', 800);
+      setTimeout(() => {
+        window.location.href = data.role === 'student' ? 'student-dashboard.html' : 'dashboard.html';
+      }, 800);
     } catch (err) {
       showToast(err.message || 'Login failed', 'error');
+
       btn.disabled = false; lbl.textContent = 'Login to Dashboard'; spin.classList.add('hidden');
     }
   });

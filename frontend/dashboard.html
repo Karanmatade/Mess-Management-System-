@@ -25,6 +25,8 @@
     <a href="billing.html"    class="nav-link"><span class="nav-icon">💰</span>Billing</a>
     <div class="nav-section-label">Analytics</div>
     <a href="reports.html"    class="nav-link"><span class="nav-icon">📈</span>Reports</a>
+    <div class="nav-section-label">Admin</div>
+    <a href="settings.html"   class="nav-link"><span class="nav-icon">⚙️</span>Settings</a>
   </nav>
   <div class="sidebar-footer">
     <div class="sidebar-user">
@@ -102,13 +104,13 @@
       </div>
       <div class="glass-card" style="padding:22px">
         <div class="flex-between mb-16">
-          <h3 style="font-size:15px">👨‍🎓 Recent Students</h3>
-          <a href="students.html" class="btn btn-outline btn-sm">View All</a>
+          <h3 style="font-size:15px">👨‍🎓 Active Billing Cycles</h3>
+          <a href="billing.html" class="btn btn-outline btn-sm">View History</a>
         </div>
-        <div class="table-wrap">
+        <div class="table-wrap" style="max-height: 400px; overflow-y: auto;">
           <table>
-            <thead><tr><th>Name</th><th>Room</th><th>Status</th></tr></thead>
-            <tbody id="recent-students"></tbody>
+            <thead><tr><th>Name</th><th>Meals Taken</th><th>Curr. Bill</th><th>Status</th></tr></thead>
+            <tbody id="active-cycles"></tbody>
           </table>
         </div>
       </div>
@@ -186,14 +188,22 @@ async function loadDashboard() {
         <p style="margin-top:6px;font-size:13px;color:var(--text-secondary)">${menu.dinner||'—'}</p>
       </div>`;
 
-    // Recent students
-    const tbody = document.getElementById('recent-students');
-    tbody.innerHTML = d.recent_students.map(s => `
-      <tr>
-        <td>${s.name}</td>
-        <td><span class="badge badge-info">${s.room_no}</span></td>
-        <td><span class="badge badge-${s.status==='active'?'success':'danger'}">${s.status}</span></td>
-      </tr>`).join('');
+    // Active Cycles
+    const active = await api.get('/billing/active');
+    const tbody = document.getElementById('active-cycles');
+    tbody.innerHTML = active.map(s => {
+      let isEnding = s.ending_soon;
+      return `
+      <tr style="${isEnding ? 'background:rgba(245,158,11,0.1)' : ''}">
+        <td>
+          <div style="font-weight:bold">${s.name} ${isEnding ? '<span title="Ending Soon">⚠️</span>' : ''}</div>
+          <div style="font-size:10px;color:var(--text-muted)">Joined: ${new Date(s.date_of_joining).toLocaleDateString('en-IN')}</div>
+        </td>
+        <td><span class="badge badge-info">${s.meals_taken} meals</span></td>
+        <td><strong>₹${s.total_bill}</strong></td>
+        <td><span class="badge badge-${s.days_remaining <= 5 ? (s.days_remaining <= 1?'danger':'warning') : 'success'}">${s.days_remaining} days left</span></td>
+      </tr>`;
+    }).join('');
 
   } catch(err) { showToast('Failed to load dashboard: '+err.message,'error'); }
 }

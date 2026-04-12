@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Settings — MessAdmin</title>
+<meta name="description" content="Mess owner settings — configure billing, mess name, meal rates and more">
+<link rel="stylesheet" href="css/style.css">
+<style>
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media(max-width:800px){.settings-grid{grid-template-columns:1fr}}
+.settings-section{background:var(--bg-card);border:1px solid var(--border-glass);border-radius:16px;padding:24px}
+.settings-section h3{font-size:15px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px;padding-bottom:14px;border-bottom:1px solid var(--border-glass)}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.setting-row:last-child{border-bottom:none;padding-bottom:0}
+.setting-label{font-size:14px;font-weight:500;color:var(--text-primary)}
+.setting-desc{font-size:12px;color:var(--text-muted);margin-top:2px}
+.setting-control{flex-shrink:0;min-width:160px;text-align:right}
+.setting-control .form-control{text-align:right;width:160px}
+.toggle-wrap{display:flex;align-items:center;justify-content:flex-end;gap:10px;font-size:13px;color:var(--text-secondary)}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:#374151;border-radius:24px;cursor:pointer;transition:.3s}
+.toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle-switch input:checked+.toggle-slider{background:var(--primary)}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+/* Info box */
+.info-box{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:14px 18px;font-size:13px;color:var(--text-secondary);margin-bottom:20px;line-height:1.6}
+.info-box strong{color:var(--primary)}
+
+/* Stats strip */
+.stat-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:700px){.stat-strip{grid-template-columns:1fr}}
+.stat-pill{padding:18px 20px;background:var(--bg-card);border:1px solid var(--border-glass);border-radius:14px;display:flex;align-items:center;gap:14px}
+.sp-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.sp-lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px}
+.sp-val{font-size:22px;font-weight:800;font-family:'Outfit',sans-serif}
+
+/* Danger zone */
+.danger-zone{border-color:rgba(239,68,68,.3) !important;background:rgba(239,68,68,.04) !important}
+.danger-zone h3{color:#f87171}
+</style>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand"><div class="brand-icon">🍽️</div><div class="brand-text"><span class="brand-name">MessAdmin</span><span class="brand-sub">Hostel System</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="dashboard.html" class="nav-link"><span class="nav-icon">📊</span>Dashboard</a>
+    <a href="students.html"  class="nav-link"><span class="nav-icon">👨‍🎓</span>Students</a>
+    <a href="attendance.html"class="nav-link"><span class="nav-icon">✅</span>Attendance</a>
+    <div class="nav-section-label">Operations</div>
+    <a href="menu.html"      class="nav-link"><span class="nav-icon">🍱</span>Weekly Menu</a>
+    <a href="billing.html"   class="nav-link"><span class="nav-icon">💰</span>Billing</a>
+    <div class="nav-section-label">Analytics</div>
+    <a href="reports.html"   class="nav-link"><span class="nav-icon">📈</span>Reports</a>
+    <div class="nav-section-label">Admin</div>
+    <a href="settings.html"  class="nav-link active"><span class="nav-icon">⚙️</span>Settings</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user"><div class="user-avatar" id="sidebar-avatar">A</div><div><div class="user-name" id="sidebar-username">Admin</div><div class="user-role" id="sidebar-role">Administrator</div></div></div>
+    <button class="btn btn-outline btn-sm w-100 mt-16" id="logout-btn">🚪 Logout</button>
+  </div>
+</aside>
+
+<div class="main-content">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button id="sidebar-toggle" style="background:none;border:none;color:var(--text-primary);font-size:22px;cursor:pointer">☰</button>
+      <h1 class="page-title">⚙️ Settings</h1>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary" onclick="saveAllSettings()" id="save-btn">💾 Save All Changes</button>
+    </div>
+  </header>
+
+  <div class="content-wrap">
+
+    <!-- Quick Stats -->
+    <div class="stat-strip">
+      <div class="stat-pill">
+        <div class="sp-icon" style="background:rgba(99,102,241,.2)">🏠</div>
+        <div><div class="sp-lbl">Active Students</div><div class="sp-val" id="ss-students">—</div></div>
+      </div>
+      <div class="stat-pill">
+        <div class="sp-icon" style="background:rgba(245,158,11,.2)">💰</div>
+        <div><div class="sp-lbl">Cost / Meal (Current)</div><div class="sp-val" id="ss-cpm">₹40</div></div>
+      </div>
+      <div class="stat-pill">
+        <div class="sp-icon" style="background:rgba(16,185,129,.2)">📋</div>
+        <div><div class="sp-lbl">Cycle Length</div><div class="sp-val">30 days</div></div>
+      </div>
+    </div>
+
+    <div class="settings-grid">
+      <!-- ── Mess Info ──────────────────────────────────────── -->
+      <div class="settings-section">
+        <h3>🏠 Mess Information</h3>
+        <div class="info-box">
+          These details appear on student bills and PDF invoices.
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Mess / Hostel Name</div>
+            <div class="setting-desc">Displayed on all PDF invoices</div>
+          </div>
+          <div class="setting-control">
+            <input type="text" id="s-mess-name" class="form-control" placeholder="e.g. Shiv Hostel Mess" style="width:200px;text-align:left">
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Owner / Admin Name</div>
+            <div class="setting-desc">Contact person for billing queries</div>
+          </div>
+          <div class="setting-control">
+            <input type="text" id="s-owner-name" class="form-control" placeholder="e.g. Shiv Shambhu" style="width:200px;text-align:left">
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Contact Phone</div>
+            <div class="setting-desc">Printed on student bills</div>
+          </div>
+          <div class="setting-control">
+            <input type="tel" id="s-contact" class="form-control" placeholder="98XXXXXXXX" style="width:200px;text-align:left">
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Address</div>
+            <div class="setting-desc">Hostel full address</div>
+          </div>
+          <div class="setting-control">
+            <input type="text" id="s-address" class="form-control" placeholder="Street, City" style="width:200px;text-align:left">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Billing Settings ──────────────────────────────── -->
+      <div class="settings-section">
+        <h3>💰 Billing & Pricing</h3>
+        <div class="info-box">
+          Changes to meal cost will apply to <strong>new bills only</strong>. Existing bills are not retroactively changed.
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Breakfast Cost (₹)</div>
+            <div class="setting-desc">Rate charged per breakfast</div>
+          </div>
+          <div class="setting-control">
+            <input type="number" id="s-cost-breakfast" class="form-control" placeholder="30" min="1" max="500" step="0.5">
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Lunch Cost (₹)</div>
+            <div class="setting-desc">Rate charged per lunch</div>
+          </div>
+          <div class="setting-control">
+            <input type="number" id="s-cost-lunch" class="form-control" placeholder="40" min="1" max="500" step="0.5">
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Dinner Cost (₹)</div>
+            <div class="setting-desc">Rate charged per dinner</div>
+          </div>
+          <div class="setting-control">
+            <input type="number" id="s-cost-dinner" class="form-control" placeholder="40" min="1" max="500" step="0.5">
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Billing Cycle (days)</div>
+            <div class="setting-desc">Duration of each billing period</div>
+          </div>
+          <div class="setting-control">
+            <input type="number" class="form-control" value="30" disabled style="background:rgba(255,255,255,.03);cursor:not-allowed" title="Fixed 30-day cycles">
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Default Monthly Fee (₹)</div>
+            <div class="setting-desc">Pre-filled when adding new students</div>
+          </div>
+          <div class="setting-control">
+            <input type="number" id="s-default-fee" class="form-control" placeholder="1800" min="0" step="50">
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Late Payment Note</div>
+            <div class="setting-desc">Shown on pending bills in PDF</div>
+          </div>
+          <div class="setting-control">
+            <input type="text" id="s-late-note" class="form-control" placeholder="Pay by 5th of month" style="width:200px;text-align:left">
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Alerts / Notifications ────────────────────────── -->
+      <div class="settings-section">
+        <h3>🔔 Alerts & Notifications</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Cycle Ending Alert (days)</div>
+            <div class="setting-desc">Highlight students with ≤ N days left</div>
+          </div>
+          <div class="setting-control">
+            <input type="number" id="s-alert-days" class="form-control" placeholder="5" min="1" max="15">
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Show Dashboard Alerts</div>
+            <div class="setting-desc">Highlight ending-soon cycles on dashboard</div>
+          </div>
+          <div class="setting-control">
+            <div class="toggle-wrap">
+              <span id="alert-lbl">On</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="s-dash-alerts" checked onchange="document.getElementById('alert-lbl').textContent=this.checked?'On':'Off'">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Auto-Run Billing</div>
+            <div class="setting-desc">Auto-generate bills when cycles complete</div>
+          </div>
+          <div class="setting-control">
+            <div class="toggle-wrap">
+              <span id="auto-lbl">On</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="s-auto-billing" checked onchange="document.getElementById('auto-lbl').textContent=this.checked?'On':'Off'">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Change Password ───────────────────────────────── -->
+      <div class="settings-section">
+        <h3>🔐 Security & Account</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Admin Username</div>
+            <div class="setting-desc">Login identifier (cannot change)</div>
+          </div>
+          <div class="setting-control">
+            <span style="font-size:14px;color:var(--text-secondary)" id="disp-username">admin</span>
+          </div>
+        </div>
+        <div style="margin-top:16px">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px">Change Admin Password</p>
+          <div class="form-group" style="margin-bottom:10px">
+            <label class="form-label">Current Password</label>
+            <input type="password" id="cp-old" class="form-control" placeholder="Current password">
+          </div>
+          <div class="form-group" style="margin-bottom:10px">
+            <label class="form-label">New Password</label>
+            <input type="password" id="cp-new" class="form-control" placeholder="New password (min 6 chars)">
+          </div>
+          <div class="form-group" style="margin-bottom:14px">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" id="cp-confirm" class="form-control" placeholder="Re-enter new password">
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="changePassword()">🔐 Update Password</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Danger Zone ────────────────────────────────────── -->
+    <div class="settings-section danger-zone" style="margin-top:24px">
+      <h3>⚠️ Danger Zone</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+        <div>
+          <div class="setting-label">Re-run Billing Automation</div>
+          <div class="setting-desc">Checks all students and generates missing bills for completed cycles.</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="runBillingAutomation()">⚡ Run Now</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-top:18px;padding-top:18px;border-top:1px solid rgba(255,255,255,.05)">
+        <div>
+          <div class="setting-label" style="color:#f87171">Reset Admin Password to Default</div>
+          <div class="setting-desc">Sets admin password back to <code style="background:rgba(255,255,255,.1);padding:1px 6px;border-radius:4px">admin@123</code></div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="confirmResetPwd()">🔄 Reset Password</button>
+      </div>
+    </div>
+
+    <!-- ── System Info ─────────────────────────────────────── -->
+    <div class="settings-section" style="margin-top:24px">
+      <h3>ℹ️ System Information</h3>
+      <div class="setting-row">
+        <div class="setting-label">System Version</div>
+        <div style="color:var(--text-secondary);font-size:13px">MessAdmin v2.0</div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">Backend API</div>
+        <div><span class="badge badge-success" id="api-status">Checking…</span></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">Database</div>
+        <div style="color:var(--text-secondary);font-size:13px">MySQL (mess_management)</div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">Session Expiry</div>
+        <div style="color:var(--text-secondary);font-size:13px">8 hours</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+requireAuth();
+
+const user = getUser();
+document.getElementById('disp-username').textContent = user.username || 'admin';
+
+// ─── Load Settings ────────────────────────────────────────
+async function loadSettings() {
+  try {
+    const s = await api.get('/billing/settings');
+    if (s.cost_breakfast) document.getElementById('s-cost-breakfast').value = s.cost_breakfast;
+    else if (s.cost_per_meal) document.getElementById('s-cost-breakfast').value = s.cost_per_meal;
+    
+    if (s.cost_lunch) document.getElementById('s-cost-lunch').value = s.cost_lunch;
+    else if (s.cost_per_meal) document.getElementById('s-cost-lunch').value = s.cost_per_meal;
+    
+    if (s.cost_dinner) document.getElementById('s-cost-dinner').value = s.cost_dinner;
+    else if (s.cost_per_meal) document.getElementById('s-cost-dinner').value = s.cost_per_meal;
+    
+    document.getElementById('ss-cpm').textContent = `B:₹${document.getElementById('s-cost-breakfast').value} / L:₹${document.getElementById('s-cost-lunch').value} / D:₹${document.getElementById('s-cost-dinner').value}`;
+    if (s.mess_name)       document.getElementById('s-mess-name').value = s.mess_name;
+    if (s.owner_name)      document.getElementById('s-owner-name').value = s.owner_name;
+    if (s.contact_phone)   document.getElementById('s-contact').value = s.contact_phone;
+    if (s.address)         document.getElementById('s-address').value = s.address;
+    if (s.default_fee)     document.getElementById('s-default-fee').value = s.default_fee;
+    if (s.late_note)       document.getElementById('s-late-note').value = s.late_note;
+    if (s.alert_days)      document.getElementById('s-alert-days').value = s.alert_days;
+  } catch(e) { /* settings table may not exist yet */ }
+  checkApiStatus();
+  loadStudentCount();
+}
+
+async function loadStudentCount() {
+  try {
+    const r = await api.get('/dashboard/');
+    document.getElementById('ss-students').textContent = r.total_students;
+  } catch(e) {}
+}
+
+async function checkApiStatus() {
+  try {
+    const r = await fetch('http://localhost:5000/');
+    const el = document.getElementById('api-status');
+    if (r.ok) { el.textContent = '✅ Connected'; el.className = 'badge badge-success'; }
+    else       { el.textContent = '❌ Error';     el.className = 'badge badge-danger'; }
+  } catch(e) {
+    const el = document.getElementById('api-status');
+    el.textContent = '❌ Offline'; el.className = 'badge badge-danger';
+  }
+}
+
+// ─── Save Settings ────────────────────────────────────────
+async function saveAllSettings() {
+  const btn  = document.getElementById('save-btn');
+  btn.disabled = true; btn.textContent = '⏳ Saving…';
+
+  const payload = {
+    cost_breakfast: document.getElementById('s-cost-breakfast').value || '30',
+    cost_lunch:     document.getElementById('s-cost-lunch').value || '40',
+    cost_dinner:    document.getElementById('s-cost-dinner').value || '40',
+    mess_name:     document.getElementById('s-mess-name').value || 'MessAdmin Hostel',
+    owner_name:    document.getElementById('s-owner-name').value || '',
+    contact_phone: document.getElementById('s-contact').value || '',
+    address:       document.getElementById('s-address').value || '',
+    default_fee:   document.getElementById('s-default-fee').value || '1800',
+    late_note:     document.getElementById('s-late-note').value || '',
+    alert_days:    document.getElementById('s-alert-days').value || '5',
+  };
+
+  try {
+    await api.post('/billing/settings', payload);
+    showToast('✅ Settings saved successfully!', 'success');
+    document.getElementById('ss-cpm').textContent = `B:₹${payload.cost_breakfast} / L:₹${payload.cost_lunch} / D:₹${payload.cost_dinner}`;
+  } catch(e) {
+    showToast('⚠️ Could not save all settings: ' + e.message, 'warning');
+  }
+  btn.disabled = false; btn.textContent = '💾 Save All Changes';
+}
+
+// ─── Change Password ──────────────────────────────────────
+async function changePassword() {
+  const old_pwd = document.getElementById('cp-old').value;
+  const new_pwd = document.getElementById('cp-new').value;
+  const confirm = document.getElementById('cp-confirm').value;
+
+  if (!old_pwd || !new_pwd || !confirm) { showToast('Fill all password fields', 'warning'); return; }
+  if (new_pwd.length < 6) { showToast('New password must be at least 6 characters', 'warning'); return; }
+  if (new_pwd !== confirm) { showToast('New passwords do not match', 'error'); return; }
+
+  try {
+    await api.post('/auth/change-password', {
+      username: user.username || 'admin',
+      old_password: old_pwd,
+      new_password: new_pwd,
+    });
+    showToast('🔐 Password updated successfully!', 'success');
+    document.getElementById('cp-old').value = '';
+    document.getElementById('cp-new').value = '';
+    document.getElementById('cp-confirm').value = '';
+  } catch(e) { showToast(e.message || 'Failed to change password', 'error'); }
+}
+
+// ─── Billing Automation ───────────────────────────────────
+async function runBillingAutomation() {
+  try {
+    const r = await api.get('/billing/auto-update');
+    showToast(r.message, 'success');
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+// ─── Reset Password ───────────────────────────────────────
+async function confirmResetPwd() {
+  if (!confirm('Are you sure? This will reset admin password to admin@123')) return;
+  try {
+    await api.post('/auth/change-password', {
+      username: user.username || 'admin',
+      old_password: '__RESET_TOKEN__',  // handled if you add a reset route
+      new_password: 'admin@123',
+    });
+    showToast('Password reset to admin@123', 'success');
+  } catch(e) {
+    showToast('Could not reset automatically. Use fix_password.py from backend folder.', 'warning');
+  }
+}
+
+loadSettings();
+</script>
+</body>
+</html>

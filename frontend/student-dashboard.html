@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Student Dashboard — MessAdmin</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  .progress-wrap { background: var(--surface-container-high); border-radius: 99px; height: 12px; margin-top: 10px; overflow: hidden; position: relative;}
+  .progress-fill { background: var(--primary); height: 100%; transition: width 0.4s; }
+  .ending-soon .progress-fill { background: var(--warning); }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">🍽️</div>
+    <div class="brand-text"><span class="brand-name">MessPortal</span><span class="brand-sub">Student Space</span></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="student-dashboard.html" class="nav-link active"><span class="nav-icon">📊</span>My Dashboard</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sidebar-avatar">S</div>
+      <div><div class="user-name" id="sidebar-username">Student</div><div class="user-role" id="sidebar-role">Resident</div></div>
+    </div>
+    <button class="btn btn-outline btn-sm w-100 mt-16" id="logout-btn">🚪 Logout</button>
+  </div>
+</aside>
+
+<div class="main-content">
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <h1 class="page-title">👋 Welcome back!</h1>
+    </div>
+    <div class="topbar-right">
+      <button onclick="exportPFD()" class="btn btn-outline btn-sm">📄 Export Bill PDF</button>
+    </div>
+  </header>
+
+  <div class="content-wrap" id="printable-area">
+    <!-- Alert Banner -->
+    <div id="alert-banner" style="display:none; padding:16px; border-radius:12px; margin-bottom:20px; font-weight:bold; background:var(--warning); color:#fff"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">
+      <!-- Cycle Progress -->
+      <div class="glass-card" style="padding:24px;" id="cycle-card">
+        <h3 style="font-size:16px;margin-bottom:8px">⏱️ Billing Cycle Progress</h3>
+        <p style="color:var(--text-secondary);font-size:14px">Cycle started on: <span id="cycle-start" style="color:var(--text-primary);font-weight:bold">—</span></p>
+        <div class="progress-wrap" id="progress-container">
+          <div class="progress-fill" id="cycle-progress" style="width:0%"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:var(--text-muted)">
+          <span id="days-passed">0 Days Passed</span>
+          <span id="days-remaining">0 Days Remaining</span>
+        </div>
+      </div>
+
+      <!-- Billing Card -->
+      <div class="glass-card" style="padding:24px; display:flex; flex-direction:column; justify-content:center">
+        <h3 style="font-size:16px;margin-bottom:8px">💳 Current Bill</h3>
+        <div style="display:flex;align-items:flex-end;gap:10px">
+          <h2 id="current-bill" style="font-size:36px;color:var(--primary);line-height:1">—</h2>
+          <span style="color:var(--text-secondary);margin-bottom:6px">Total (Dynamic per meal)</span>
+        </div>
+        <p style="margin-top:10px;font-size:14px;color:var(--text-muted)">Meals taken: <strong id="meals-taken" style="color:var(--text-primary)">—</strong> | Status: <strong id="cycle-status">—</strong></p>
+      </div>
+    </div>
+
+    <!-- Mark Meals -->
+    <div class="glass-card" style="padding:24px; margin-bottom:24px">
+      <h3 style="font-size:16px;margin-bottom:16px">🍽️ Mark Today's Meals</h3>
+      <div style="display:flex; gap:16px">
+        <button id="btn-Breakfast" onclick="toggleMeal('Breakfast')" class="btn btn-outline" style="flex:1;padding:16px;font-size:16px">🌅 Breakfast</button>
+        <button id="btn-Lunch" onclick="toggleMeal('Lunch')" class="btn btn-outline" style="flex:1;padding:16px;font-size:16px">☀️ Lunch</button>
+        <button id="btn-Dinner" onclick="toggleMeal('Dinner')" class="btn btn-outline" style="flex:1;padding:16px;font-size:16px">🌙 Dinner</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+  requireAuth();
+
+  let todayMarked = [];
+
+  async function loadData() {
+    try {
+      // Load Cycle
+      const c = await api.get('/billing/my-cycle');
+      
+      document.getElementById('cycle-start').textContent = new Date(c.cycle_start).toLocaleDateString();
+      document.getElementById('days-passed').textContent = c.days_passed + ' Days Passed';
+      document.getElementById('days-remaining').textContent = c.days_remaining + ' Days Remaining';
+      document.getElementById('meals-taken').textContent = c.meals_taken;
+      document.getElementById('current-bill').textContent = '₹' + c.current_bill;
+      document.getElementById('cycle-status').textContent = c.status;
+
+      let pct = (c.days_passed / 30) * 100;
+      if (pct > 100) pct = 100;
+      document.getElementById('cycle-progress').style.width = pct + '%';
+
+      const banner = document.getElementById('alert-banner');
+      if (c.days_remaining <= 5 && c.days_remaining > 1) {
+        banner.style.display = 'block';
+        banner.textContent = `⚠️ Your mess billing cycle will end in ${c.days_remaining} days.`;
+        document.getElementById('progress-container').classList.add('ending-soon');
+      } else if (c.days_remaining === 1) {
+        banner.style.display = 'block';
+        banner.textContent = `⚠️ Last day of your mess cycle!`;
+        document.getElementById('progress-container').classList.add('ending-soon');
+      } else if (c.days_remaining === 0) {
+         banner.style.display = 'block';
+         banner.textContent = `✅ Your monthly mess cycle has ended. Final bill generated.`;
+      }
+
+      // Load Meals
+      const meals = await api.get('/meals/today');
+      todayMarked = meals.marked || [];
+      updateButtons();
+
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  function updateButtons() {
+    ['Breakfast', 'Lunch', 'Dinner'].forEach(m => {
+      const btn = document.getElementById('btn-' + m);
+      if (todayMarked.includes(m)) {
+        btn.classList.remove('btn-outline');
+        btn.classList.add('btn-primary');
+        btn.innerHTML = '✅ ' + m + ' Marked';
+      } else {
+        btn.classList.add('btn-outline');
+        btn.classList.remove('btn-primary');
+        const icons = { Breakfast: '🌅', Lunch: '☀️', Dinner: '🌙' };
+        btn.innerHTML = icons[m] + ' Mark ' + m;
+      }
+    });
+  }
+
+  async function toggleMeal(type) {
+    try {
+      const action = todayMarked.includes(type) ? 'unmark' : 'mark';
+      await api.post('/meals/mark', { meal_type: type, action });
+      showToast(`Successfully ${action}ed ${type}`, 'success');
+      loadData();
+    } catch(e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  function exportPFD() {
+    const element = document.getElementById('printable-area');
+    html2pdf().from(element).save('My_Bill.pdf');
+  }
+
+  loadData();
+</script>
+</body>
+</html>
